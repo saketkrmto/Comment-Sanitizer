@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Comment Sanitizer App</title>
     <style>
         :root {
@@ -299,6 +300,42 @@
         .tab-content.active h2.animate-on-load { animation-delay: 0.1s; }
         .tab-content.active p.animate-on-load { animation-delay: 0.2s; }
         .tab-content.active .tab-image.animate-fade-in { animation-delay: 0.3s; }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 1rem;
+                gap: 1rem;
+            }
+            
+            nav {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+            
+            nav button {
+                font-size: 0.9rem;
+                padding: 0.4rem 0.8rem;
+                flex: 1 1 auto;
+                text-align: center;
+            }
+            
+            nav button[data-tab="history"] {
+                margin-left: 0;
+            }
+
+            main {
+                padding: 1rem;
+                margin: 1rem;
+            }
+
+            #home .tab-image, #help .tab-image, #about .tab-image, #contact .tab-image, #history .tab-image {
+                height: auto;
+                max-height: 200px;
+            }
+        }
     </style>
 </head>
 <body>
