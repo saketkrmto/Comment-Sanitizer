@@ -458,35 +458,6 @@
     </footer>
 
     <script>
-        let badWords = [];
-        // Load bad words list
-        async function loadBadWords() {
-            try {
-                const res = await fetch('https://raw.githubusercontent.com/MauriceButler/badwords/master/array.js');
-                const text = await res.text();
-                badWords = eval(text.replace('module.exports =', ''));
-                document.getElementById('sanitizeBtn').disabled = false;
-                document.getElementById('sanitizeBtn').textContent = 'Sanitize Comment';
-            } catch (err) {
-                alert('Failed to load bad words list.');
-            }
-        }
-        // Sanitize text helper
-        function sanitizeText(input) {
-            const foundWords = new Set();
-            if (badWords.length === 0) return { sanitized: input, foundWords };
-            // Secure regex escape for bad words
-            function escapeRegex(word) {
-                return word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            }
-            const escapedWords = badWords.map(w => escapeRegex(w));
-            const regex = new RegExp(`\\b(${escapedWords.join('|')})\\b`, 'gi');
-            const sanitized = input.replace(regex, match => {
-                foundWords.add(match.toLowerCase());
-                return '*'.repeat(match.length);
-            });
-            return { sanitized, foundWords };
-        }
         // History management with localStorage
         function saveHistory(comment) {
             if (!comment) return;
@@ -494,6 +465,7 @@
             history.push(comment);
             localStorage.setItem('commentSanitizerHistory', JSON.stringify(history));
         }
+
         function loadHistory() {
             const historyList = document.getElementById('historyList');
             const history = JSON.parse(localStorage.getItem('commentSanitizerHistory') || '[]');
@@ -508,36 +480,79 @@
                 historyList.appendChild(li);
             });
         }
+
+        async function sanitizeTextAPI(text) {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/sanitize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                
+                const data = await response.json();
+                return { sanitized: data.sanitized, foundWords: data.foundWords };
+            } catch (error) {
+                console.error("API error:", error);
+                alert("Failed to connect to the sanitization server. Ensure the backend is running.");
+                return { sanitized: text, foundWords: [] };
+            }
+        }
+
         // Handle comment sanitization
-        document.getElementById('sanitizeBtn').addEventListener('click', () => {
+        document.getElementById('sanitizeBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('sanitizeBtn');
             const input = document.getElementById('commentInput').value.trim();
             if (!input) return alert('Please enter a comment to sanitize.');
-            const { sanitized, foundWords } = sanitizeText(input);
+            
+            btn.disabled = true;
+            btn.textContent = 'Sanitizing...';
+            
+            const { sanitized, foundWords } = await sanitizeTextAPI(input);
+            
             document.getElementById('sanitizedComment').textContent = sanitized;
             const messagesDiv = document.getElementById('messages');
             messagesDiv.innerHTML = '';
-            foundWords.forEach(word => {
-                messagesDiv.innerHTML += `<p class="message">⚠️ "${word}" is inappropriate.</p>`;
-            });
-            if (foundWords.size === 0) {
-                messagesDiv.innerHTML = `<p class="success">✅ No bad words found!</p>`;
+            
+            if (foundWords && foundWords.length > 0) {
+                foundWords.forEach(word => {
+                    messagesDiv.innerHTML += `<p class="message">⚠️ "${word}" was flagged by the ML model.</p>`;
+                });
+            } else {
+                messagesDiv.innerHTML = `<p class="success">✅ No bad words found by the ML model!</p>`;
             }
+            
             document.getElementById('outputSection').style.display = 'block';
+            
             // Save to history
             saveHistory(sanitized);
             loadHistory();
+            
+            btn.disabled = false;
+            btn.textContent = 'Sanitize Comment';
         });
+
         // File sanitization
         document.getElementById('fileSanitizeBtn').addEventListener('click', () => {
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
+            const btn = document.getElementById('fileSanitizeBtn');
             if (!file) return alert('Please select a file.');
+            
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const text = e.target.result;
-                const { sanitized, foundWords } = sanitizeText(text);
+                const { sanitized, foundWords } = await sanitizeTextAPI(text);
+                
                 document.getElementById('sanitizedFileText').textContent = sanitized;
                 document.getElementById('fileOutput').style.display = 'block';
+                
                 // Store sanitized text for download
                 document.getElementById('downloadBtn').onclick = () => {
                     const blob = new Blob([sanitized], { type: 'text/plain' });
@@ -548,14 +563,19 @@
                     link.click();
                     document.body.removeChild(link);
                 };
+                
+                btn.disabled = false;
+                btn.textContent = 'Sanitize File';
             };
             reader.readAsText(file);
         });
+
         // Clear history functionality
         document.getElementById('clearHistoryBtn').addEventListener('click', () => {
             localStorage.removeItem('commentSanitizerHistory');
             loadHistory();
         });
+
         // Tab navigation
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -571,16 +591,18 @@
                     // Remove and re-add class to restart animation
                     el.classList.remove('animate-on-load', 'animate-fade-in');
                     void el.offsetWidth; // Trigger reflow
-                    if (el.tagName === 'H2') { // Assuming H2 for slide-in
+                    if (el.tagName === 'H2') { 
                         el.classList.add('animate-on-load');
-                    } else { // Others for fade-in
+                    } else { 
                         el.classList.add('animate-fade-in');
                     }
                 });
             });
         });
-        // Initialize
-        loadBadWords();
+
+        // Initialize UI
+        document.getElementById('sanitizeBtn').disabled = false;
+        document.getElementById('sanitizeBtn').textContent = 'Sanitize Comment';
         loadHistory();
     </script>
 </body>
