@@ -16,7 +16,7 @@ The backend is a Python application that needs to be running in the background t
 1. Open your **Command Prompt** (or PowerShell or Terminal).
 2. Navigate to the `backend` folder inside this project by typing:
    ```bash
-   cd C:\Users\saket\OneDrive\Desktop\Comment-Sanitizer\backend
+   cd backend
    ```
 3. Run the following command to start the server:
    ```bash
@@ -27,7 +27,7 @@ The backend is a Python application that needs to be running in the background t
 
 ### Step 2: Open the Website
 1. Open your File Explorer.
-2. Go to `C:\Users\saket\OneDrive\Desktop\Comment-Sanitizer`.
+2. Navigate to the project directory where you cloned or downloaded this repository.
 3. Simply **double-click** the `index.html` file.
 4. It will open in your default web browser (like Chrome or Edge).
 
