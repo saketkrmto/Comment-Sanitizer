@@ -481,9 +481,19 @@
             });
         }
 
+        // ==========================================
+        // DEPLOYMENT CONFIGURATION
+        // ==========================================
+        // When running locally, this should be: http://127.0.0.1:8000/sanitize
+        // When you deploy your backend to Render/Railway, replace this with your new live URL!
+        // Example: const API_URL = 'https://comment-sanitizer-backend.onrender.com/sanitize';
+        
+        const API_URL = 'http://127.0.0.1:8000/sanitize'; 
+        // ==========================================
+
         async function sanitizeTextAPI(text) {
             try {
-                const response = await fetch('http://127.0.0.1:8000/sanitize', {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: text })
@@ -497,7 +507,7 @@
                 return { sanitized: data.sanitized, foundWords: data.foundWords };
             } catch (error) {
                 console.error("API error:", error);
-                alert("Failed to connect to the sanitization server. Ensure the backend is running.");
+                alert("Failed to connect to the sanitization server. If you are running locally, ensure the backend is running. If deployed, ensure the API_URL is correct in the code.");
                 return { sanitized: text, foundWords: [] };
             }
         }
